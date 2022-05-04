@@ -300,7 +300,17 @@ class RunSubmitLauncher:
             else:
                 task_key = [k for k in job_spec.keys() if k in POSSIBLE_TASK_KEYS][0]
                 job_spec[task_key]["parameters"] = self.prepared_parameters
+        # job_spec[]
+        permissions = job_spec.get("permissions")
+        if permissions:
+            job_name = job_spec.get("name")
+            job_spec["run_name"] = job_name + self.branch_name
+            job_spec["access_control_list"] = permissions["access_control_list"]
+            job_spec["idempotency_token"] = get_current_commit_sha()
+            #TODO add idempotency token == commit SHA
 
+        dbx_echo("Permissions are : "+str(permissions))
+        dbx_echo("Job is : " + str(job_spec))
         run_data = _submit_run(self.api_client, job_spec)
         return run_data, None
 
