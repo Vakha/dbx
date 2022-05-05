@@ -255,7 +255,7 @@ def _find_deployment_run(
     dbx_echo("Successfully found deployment per given job name")
     return run_info
 
-
+import uuid
 class RunSubmitLauncher:
     def __init__(
         self,
@@ -301,17 +301,21 @@ class RunSubmitLauncher:
                 task_key = [k for k in job_spec.keys() if k in POSSIBLE_TASK_KEYS][0]
                 job_spec[task_key]["parameters"] = self.prepared_parameters
         # job_spec[]
-        try:
-            permissions = job_spec.get("permissions")
-            if permissions:
-                job_name = job_spec.get("name")
-                job_spec["run_name"] = job_name + get_current_branch_name()
-                job_spec["access_control_list"] = permissions["access_control_list"]
-                job_spec["idempotency_token"] = "HEX COMMIT VALUE"
-                #TODO add idempotency token == commit SHA
-        except Exception as e:
-            dbx_echo(str(e))
-        dbx_echo("Permissions are")
+        default_branch_name = "unknown_branch"
+        current_branch = get_current_branch_name()
+        job_name = job_spec.get("name")
+        if current_branch:
+
+            job_spec["run_name"] = job_name + str(current_branch)
+        else:
+            job_spec["run_name"] = job_name + default_branch_name
+
+        permissions = job_spec.get("permissions")
+        if permissions:
+            job_spec["access_control_list"] = permissions["access_control_list"]
+            job_spec["idempotency_token"] = str(uuid.uuid4())
+            #TODO add idempotency token == commit SHA
+
         dbx_echo("Permissions are : "+str(permissions))
         dbx_echo("Job is : " + str(job_spec))
         run_data = _submit_run(self.api_client, job_spec)
