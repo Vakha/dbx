@@ -311,14 +311,21 @@ class RunSubmitLauncher:
             job_spec["run_name"] = job_name + default_branch_name
 
         permissions = job_spec.get("permissions")
-        if permissions:
-            job_spec["access_control_list"] = permissions["access_control_list"]
-            job_spec["idempotency_token"] = str(uuid.uuid4())
-            #TODO add idempotency token == commit SHA
+
+        job_spec["access_control_list"] = permissions["access_control_list"]
+        job_spec["idempotency_token"] = str(uuid.uuid4())
+        #TODO add idempotency token == commit SHA
 
         dbx_echo("Permissions are : "+str(permissions))
         dbx_echo("Job is : " + str(job_spec))
         run_data = _submit_run(self.api_client, job_spec)
+
+
+        if permissions:
+            jobs_service = JobsService(self.api_client)
+            job_id = jobs_service.get_run(run_data["run_id"]).get("job_id")
+            self.api_client.perform_query("PUT", f"/permissions/jobs/{job_id}", data=permissions)
+
         return run_data, None
 
 
