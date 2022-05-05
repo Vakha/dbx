@@ -100,7 +100,7 @@ POSSIBLE_TASK_KEYS = ["notebook_task", "spark_jar_task", "spark_python_task", "s
 )
 @environment_option
 @debug_option
-def launch(
+def launch_new(
     environment: str,
     job: str,
     trace: bool,
@@ -305,9 +305,9 @@ class RunSubmitLauncher:
             permissions = job_spec.get("permissions")
             if permissions:
                 job_name = job_spec.get("name")
-                job_spec["run_name"] = job_name + self.branch_name
+                job_spec["run_name"] = job_name + get_current_branch_name()
                 job_spec["access_control_list"] = permissions["access_control_list"]
-                job_spec["idempotency_token"] = get_current_commit_sha()
+                job_spec["idempotency_token"] = "HEX COMMIT VALUE"
                 #TODO add idempotency token == commit SHA
         except Exception as e:
             dbx_echo(str(e))
